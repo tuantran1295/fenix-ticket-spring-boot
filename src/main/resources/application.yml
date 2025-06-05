@@ -3,8 +3,8 @@ spring:
     name: ticket
   datasource:
     url: jdbc:postgresql://localhost:5432/fenixdb
-    username: fenix
-    password: fenix123
+    username: postgres
+    password: root-1234567890
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
