@@ -22,7 +22,7 @@ ticket/
     │   │           └── ticket
     │   │               └── TicketApplication.java
     │   └── resources
-    │       ├── application.properties
+    │       ├── application.yml
     │       ├── db
     │       │   └── migration
     │       ├── static
