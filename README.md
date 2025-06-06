@@ -20,6 +20,15 @@ ticket/
     │   │   └── com
     │   │       └── fenix
     │   │           └── ticket
+    │   │               ├── controller
+    │   │               │   └── PageController.java
+    │   │               ├── dto
+    │   │               ├── exception
+    │   │               ├── model
+    │   │               ├── repository
+    │   │               ├── service
+    │   │               ├── util
+    │   │               ├── CustomErrorController.java
     │   │               └── TicketApplication.java
     │   └── resources
     │       ├── application.yml
@@ -27,6 +36,10 @@ ticket/
     │       │   └── migration
     │       ├── static
     │       └── templates
+    │           ├── index.html
+    │           ├── login.html
+    │           ├── loadtest.html
+    │           └── list-ticket.html
     └── test
         └── java
             └── com
@@ -37,13 +50,7 @@ ticket/
 
 ## Description
 
-This is a Spring Boot application for ticket management. The project follows a standard Spring Boot project structure with the following main components:
-
-- `src/main/java`: Contains the main Java source code
-- `src/main/resources`: Contains application resources, configuration files, and static assets
-- `src/test`: Contains test source code
-- `build.gradle`: Main build configuration file
-- `gradle/`: Contains Gradle wrapper files for building the project
+This is a Spring Boot application for ticket management. The project is migrated from old code base written in Java 8 and Seasar 2 Framework.
 
 ## Technologies Used
 
@@ -104,10 +111,47 @@ server:
 port: 8080
 ```
 
-## Development
+<!-- ## Development
 Run with 
 ```./gradlew bootRun```
-By default, server runs at http://localhost:8080
+By default, server runs at http://localhost:8080 -->
+
+## Docker Setup
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Build and Run with Docker
+
+1. Stop and remove existing containers and volumes:
+```bash
+docker-compose down -v
+```
+
+2. Build the application JAR:
+```bash
+./gradlew clean bootJar
+```
+
+3. Build and start the containers:
+```bash
+docker-compose up --build
+```
+
+The application will be available at http://localhost:8080
+
+### Docker Compose Services
+- Spring Boot Application (port 8080)
+- PostgreSQL Database (port 5433)
+
+## Web Pages
+The application provides the following web pages accessible through your browser:
+
+| http://localhost:8080/ | Home page (index.html) 
+| http://localhost:8080/login | Login page 
+| http://localhost:8080/tickets | Ticket list page 
+| http://localhost:8080/loadtest | Load testing page
 
 ## API Endpoints
 Base URL: http://localhost:8080
