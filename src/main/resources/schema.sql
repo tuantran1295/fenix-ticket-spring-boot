@@ -1,0 +1,19 @@
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(250) NOT NULL,
+    description VARCHAR(250) NOT NULL,
+    status VARCHAR(250) NOT NULL
+);
+
+GRANT ALL PRIVILEGES ON TABLE users TO fenix;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE users_id_seq TO fenix;
+
+GRANT ALL PRIVILEGES ON TABLE tickets TO fenix;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE tickets_id_seq TO fenix;

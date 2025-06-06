@@ -1,3 +1,4 @@
+
 -- Seed data
 INSERT INTO users (username, password)
 VALUES ('admin', 'password')

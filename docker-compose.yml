@@ -1,0 +1,25 @@
+
+services:
+  db:
+    image: postgres:16
+    container_name: fenix-postgres
+    environment:
+      POSTGRES_USER: fenix
+      POSTGRES_PASSWORD: fenix123
+      POSTGRES_DB: fenixdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: fenix-ticket-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+    depends_on:
+      - db
+    restart: unless-stopped
