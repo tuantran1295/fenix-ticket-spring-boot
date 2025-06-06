@@ -2,12 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket System Home</title>
+    <title>Migrated Spring Boot Ticket System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .center-card {
+            background-color: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px 0 rgba(25, 118, 210, 0.18);
+            max-width: 430px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            animation: fade-in 0.9s cubic-bezier(.54,1.66,.86,.64) 0s 1;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(30px);}
+            to   { opacity: 1; transform: translateY(0);}
+        }
+        h1 {
+            color: #1976d2;
+            font-weight: 700;
+            margin-bottom: 1.4rem;
+            font-size: 2rem;
+        }
+        p {
+            color: #444;
+            font-size: 1.07rem;
+            margin: 1rem 0;
+        }
+        a {
+            display: inline-block;
+            text-decoration: none;
+            color: #fff;
+            background: linear-gradient(90deg, #42a5f5 0, #1976d2 100%);
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            transition: background .2s;
+            font-weight: 500;
+            box-shadow: 0 2px 12px 0 rgba(25, 118, 210, 0.08);
+            letter-spacing: 0.01em;
+        }
+        a:hover {
+            background: linear-gradient(90deg, #1976d2 0, #42a5f5 100%);
+        }
+        @media (max-width: 500px) {
+            .center-card {
+                padding: 1.2rem 0.5rem;
+                max-width: 98vw;
+            }
+            h1 { font-size: 1.25rem;}
+        }
+    </style>
 </head>
 <body>
-<h1>Ticket System Deployed!</h1>
-<p>If you see this page, your deployment is working.</p>
-<p>Go to <a href="/login">/login</a> to access the login page.</p>
-<p>Access the load testing tool at <a href="/loadtest">/loadtest</a>.</p>
+<div class="center-card">
+    <h1>
+        Migrated Spring Boot Ticket System
+    </h1>
+    <p>
+        If you see this page, your Spring Boot deployment is working.
+    </p>
+    <p>
+        <a href="/login">Go to Login Page</a>
+    </p>
+    <p>
+        <a href="/loadtest">Access Load Testing Tool</a>
+    </p>
+</div>
 </body>
 </html>
