@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>負荷テスト - チケットシステム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            background-color: #fff; padding: 20px;
+            border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 { text-align: center; color: #333; }
+        .test-button {
+            display: block; width: 200px; margin: 20px auto; padding: 12px;
+            background-color: #4CAF50; color: white;
+            border: none; border-radius: 4px;
+            font-size: 16px; cursor: pointer; text-align: center;
+        }
+        .test-button:hover { background-color: #45a049; }
+        .test-button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        .results { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; display: none; }
+        .results h2 { margin-top: 0; color: #333; }
+        .results table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .results th, .results td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .results th { background-color: #f2f2f2; }
+        .status { margin-top: 10px; text-align: center; font-style: italic; color: #666; }
+        .tab-container { margin-top: 20px; }
+        .tabs { display: flex; border-bottom: 1px solid #ddd; }
+        .tab { padding: 10px 15px; cursor: pointer; border: 1px solid transparent; border-bottom: none; margin-right: 5px; border-radius: 5px 5px 0 0; }
+        .tab.active { background-color: #fff; border-color: #ddd; border-bottom-color: #fff; margin-bottom: -1px; font-weight: bold; }
+        .tab-content { display: none; padding: 15px; border: 1px solid #ddd; border-top: none; }
+        .tab-content.active { display: block; }
+        .toggle-details { text-align: center; margin: 15px 0; }
+        .toggle-btn { background-color: #2196F3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        .toggle-btn:hover { background-color: #0b7dda; }
+        .operation-details { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;}
+        .operation-details h3 {margin-bottom: 15px;}
+        .details-container {max-height: 500px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px;}
+        .detail-item { border-bottom: 1px solid #eee; padding: 10px; margin-bottom: 5px; background-color: #fafafa;}
+        .detail-item:nth-child(even) {background-color: #f0f0f0;}
+        .detail-header { font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        .detail-header .time { color: #4CAF50;}
+        .detail-content { display: flex; flex-wrap: wrap;}
+        .detail-section {flex: 1; min-width: 300px; padding: 10px;}
+        .detail-title { font-weight: bold; margin-bottom: 8px; color: #555;}
+        pre { background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 10px; max-height: 200px; overflow: auto; margin: 0;}
+        .error { color: #D32F2F;}
+        .success { color: #388E3C;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>チケットシステム負荷テスト</h1>
+
+    <button id="startLoadTest" class="test-button">負荷テスト開始</button>
+
+    <div id="status" class="status"></div>
+
+    <div id="results" class="results">
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" data-tab="summary">サマリー</div>
+                <div class="tab" data-tab="details">詳細結果</div>
+            </div>
+
+            <div id="summary" class="tab-content active">
+                <h2>テストサマリー</h2>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>操作</th>
+                        <th>成功率</th>
+                        <th>平均応答時間 (ms)</th>
+                        <th>最小時間 (ms)</th>
+                        <th>最大時間 (ms)</th>
+                    </tr>
+                    </thead>
+                    <tbody id="summaryBody">
+                    <!-- 結果がここに挿入されます -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="details" class="tab-content">
+                <h2>リクエスト詳細情報</h2>
+                <div class="toggle-details">
+                    <button id="toggleAllDetails" class="toggle-btn">全ての詳細を表示</button>
+                </div>
+                <div id="detailsContainer">
+                    <!-- 操作詳細がここに挿入されます -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Tab switching functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+        });
+    });
+
+    let detailsShown = false;
+    document.getElementById('toggleAllDetails').addEventListener('click', function() {
+        const detailItems = document.querySelectorAll('.detail-content');
+        detailsShown = !detailsShown;
+        detailItems.forEach(item => {
+            item.style.display = detailsShown ? 'flex' : 'none';
+        });
+        this.textContent = detailsShown ? '全ての詳細を非表示' : '全ての詳細を表示';
+    });
+
+    document.getElementById('startLoadTest').addEventListener('click', function() {
+        const button = document.getElementById('startLoadTest');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        const summaryBody = document.getElementById('summaryBody');
+        const detailsContainer = document.getElementById('detailsContainer');
+
+        button.disabled = true;
+        status.textContent = '負荷テスト実行中... 数分かかる場合があります。';
+        results.style.display = 'none';
+
+        fetch('/api/loadtest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                summaryBody.innerHTML = '';
+                detailsContainer.innerHTML = '';
+                for (const operation in data) {
+                    if (data.hasOwnProperty(operation) && operation !== 'error') {
+                        const opResult = data[operation];
+                        const summaryRow = document.createElement('tr');
+                        summaryRow.innerHTML = `
+                            <td>${formatOperationName(operation)}</td>
+                            <td>${opResult.successRate}%</td>
+                            <td>${formatNumber(opResult.avgResponseTime)}</td>
+                            <td>${formatNumber(opResult.minResponseTime)}</td>
+                            <td>${formatNumber(opResult.maxResponseTime)}</td>
+                        `;
+                        summaryBody.appendChild(summaryRow);
+
+                        if (opResult.details && Array.isArray(opResult.details)) {
+                            const detailsSection = document.createElement('div');
+                            detailsSection.className = 'operation-details';
+                            const detailsTitle = document.createElement('h3');
+                            detailsTitle.textContent = formatOperationName(operation);
+                            detailsSection.appendChild(detailsTitle);
+
+                            const detailsList = document.createElement('div');
+                            detailsList.className = 'details-container';
+
+                            opResult.details.forEach((detail, index) => {
+                                const detailItem = document.createElement('div');
+                                detailItem.className = 'detail-item';
+                                const detailHeader = document.createElement('div');
+                                detailHeader.className = 'detail-header';
+                                const isSuccess = detail.response && detail.response.success === true;
+                                const statusClass = isSuccess ? 'success' : 'error';
+
+                                detailHeader.innerHTML = `
+                                    <div>リクエスト #${index + 1} <span class="${statusClass}">(${isSuccess ? 'Success' : 'Failed'})</span></div>
+                                    <div class="time">${formatNumber(detail.executionTime)} ms</div>
+                                `;
+                                detailItem.appendChild(detailHeader);
+
+                                const detailContent = document.createElement('div');
+                                detailContent.className = 'detail-content';
+                                detailContent.style.display = 'none';
+                                const inputSection = document.createElement('div');
+                                inputSection.className = 'detail-section';
+                                inputSection.innerHTML = `
+                                    <div class="detail-title">入力:</div>
+                                    <pre>${formatJson(detail.input)}</pre>
+                                `;
+                                detailContent.appendChild(inputSection);
+                                const responseSection = document.createElement('div');
+                                responseSection.className = 'detail-section';
+                                responseSection.innerHTML = `
+                                    <div class="detail-title">レスポンス:</div>
+                                    <pre>${formatJson(detail.response)}</pre>
+                                `;
+                                detailContent.appendChild(responseSection);
+                                detailItem.appendChild(detailContent);
+                                detailHeader.addEventListener('click', function() {
+                                    const content = this.nextElementSibling;
+                                    content.style.display = content.style.display === 'none' ? 'flex' : 'none';
+                                });
+                                detailsList.appendChild(detailItem);
+                            });
+                            detailsSection.appendChild(detailsList);
+                            detailsContainer.appendChild(detailsSection);
+                        }
+                    }
+                }
+                results.style.display = 'block';
+                status.textContent = '負荷テストが完了しました。';
+                button.disabled = false;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab[data-tab="summary"]').classList.add('active');
+                document.getElementById('summary').classList.add('active');
+            })
+            .catch(error => {
+                status.textContent = '負荷テスト中にエラーが発生しました。詳細はコンソールを確認してください。';
+                button.disabled = false;
+            });
+    });
+
+    function formatOperationName(operation) {
+        switch(operation) {
+            case 'login': return 'ログイン';
+            case 'createTicket': return 'チケット作成';
+            case 'listTickets': return 'チケット一覧取得';
+            case 'updateTicket': return 'チケット更新';
+            case 'deleteTicket': return 'チケット削除';
+            default: return operation;
+        }
+    }
+    function formatJson(obj) {
+        if (!obj) return 'null';
+        try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); }
+    }
+    function formatNumber(num) {
+        return num==null ? '' : num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+</script>
+</body>
+</html>

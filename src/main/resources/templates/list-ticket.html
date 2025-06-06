@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>チケット管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; padding: 32px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
+        h2 { text-align: center; margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { background: #1976d2; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .actions button { margin-right: 6px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
+        .btn-create { background: #388e3c; color: #fff; }
+        .btn-update { background: #1976d2; color: #fff; }
+        .btn-delete { background: #d32f2f; color: #fff; }
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3);}
+        .modal-content { background: #fff; margin: 10% auto; padding: 24px; border-radius: 8px; width: 400px; position: relative;}
+        .modal-content h3 { margin-top: 0; }
+        .close { position: absolute; right: 16px; top: 12px; font-size: 22px; cursor: pointer; color: #888;}
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .error { color: #d32f2f; margin-bottom: 12px; }
+        .success { color: #388e3c; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>チケット管理</h2>
+    <button class="btn btn-create" onclick="openCreateModal()">チケット作成</button>
+    <div id="message"></div>
+    <table id="ticketTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>タイトル</th>
+            <th>説明</th>
+            <th>ステータス</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Tickets will be inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Create/Update Modal -->
+<div id="ticketModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 id="modalTitle">チケット作成</h3>
+        <form id="ticketForm">
+            <input type="hidden" id="ticketId">
+            <div class="form-group">
+                <label for="title">タイトル</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">説明</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="status">ステータス</label>
+                <input type="text" id="status" name="status" required>
+            </div>
+            <button type="submit" class="btn btn-create" id="submitBtn">作成</button>
+        </form>
+        <div id="modalMessage"></div>
+    </div>
+</div>
+
+<script>
+    let tickets = [];
+    let editingTicketId = null;
+    fetchTickets();
+
+    function fetchTickets() {
+        fetch('/api/tickets')
+            .then(res => res.json())
+            .then(data => {
+                tickets = data.tickets || [];
+                renderTickets();
+            })
+            .catch((e) => {
+                showMessage('チケットの取得に失敗しました。', true);
+            });
+    }
+
+    function renderTickets() {
+        const tbody = document.querySelector('#ticketTable tbody');
+        tbody.innerHTML = '';
+        tickets.forEach(ticket => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                    <td>${ticket.id ?? ''}</td>
+                    <td>${ticket.title ?? ''}</td>
+                    <td>${ticket.description ?? ''}</td>
+                    <td>${ticket.status ?? ''}</td>
+                    <td class="actions">
+                        <button class="btn btn-update" onclick="openUpdateModal(${ticket.id})">更新</button>
+                        <button class="btn btn-delete" onclick="deleteTicket(${ticket.id})">削除</button>
+                    </td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openCreateModal() {
+        editingTicketId = null;
+        document.getElementById('modalTitle').textContent = 'チケット作成';
+        document.getElementById('submitBtn').textContent = '作成';
+        document.getElementById('ticketId').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('status').value = '';
+        document.getElementById('modalMessage').innerHTML = '';
+        document.getElementById('ticketModal').style.display = 'block';
+    }
+
+    function openUpdateModal(id) {
+        const ticket = tickets.find(t => t.id == id);
+        if (!ticket) return;
+        editingTicketId = id;
+        document.getElementById('modalTitle').textContent = 'チケット更新';
+        document.getElementById('submitBtn').textContent = '更新';
+        document.getElementById('ticketId').value = ticket.id;
+        document.getElementById('title').value = ticket.title;
+        document.getElementById('description').value = ticket.description;
+        document.getElementById('status').value = ticket.status;
+        document.getElementById('modalMessage').innerHTML = '';
+        document.getElementById('ticketModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('ticketModal').style.display = 'none';
+    }
+
+    document.getElementById('ticketForm').addEventListener('submit', submitTicketForm);
+
+    function submitTicketForm(event) {
+        event.preventDefault();
+        const id = document.getElementById('ticketId').value;
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        const status = document.getElementById('status').value;
+        const isUpdate = !!id;
+
+        const url = '/api/tickets';
+        const method = isUpdate ? 'PUT' : 'POST';
+        const payload = isUpdate
+            ? { id: Number(id), title, description, status }
+            : { title, description, status };
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('modalMessage').innerHTML = '<div class="success">' + (isUpdate ? 'チケットが更新されました。' : 'チケットが作成されました。') + '</div>';
+                    fetchTickets();
+                    setTimeout(closeModal, 800);
+                } else {
+                    document.getElementById('modalMessage').innerHTML = '<div class="error">' + (data.error || data.message || '操作に失敗しました。') + '</div>';
+                }
+            })
+            .catch((e) => {
+                document.getElementById('modalMessage').innerHTML = '<div class="error">リクエストに失敗しました。</div>';
+            });
+    }
+
+    function deleteTicket(id) {
+        if (!confirm('このチケットを削除してもよろしいですか？')) return;
+        fetch('/api/tickets', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticketId: id })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('チケットが削除されました。');
+                    fetchTickets();
+                } else {
+                    showMessage(data.error || data.message || '削除に失敗しました。', true);
+                }
+            })
+            .catch((e) => {
+                showMessage('削除リクエストに失敗しました。', true);
+            });
+    }
+
+    function showMessage(msg, isError) {
+        document.getElementById('message').innerHTML =
+            '<div class="' + (isError ? 'error' : 'success') + '">' + msg + '</div>';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('ticketModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+</body>
+</html>
